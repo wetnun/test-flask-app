@@ -1,0 +1,41 @@
+version: "3.1"
+services:
+  db:
+    image: mariadb:10.3
+    restart: always
+    environment:
+# root password and user it will create for the app
+      MYSQL_ROOT_PASSWORD: ImSoVerySecureFearMyL33t
+      MYSQL_USER: devuser
+      MYSQL_PASSWORD: FluffyBunny
+      MYSQL_DATABASE: devdb
+    volumes:
+# persistent data dir for db and sql jobs to seed
+      - ./db-data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    networks:
+      - backend
+    deploy:
+      restart_policy:
+        condition: on-failure
+  app:
+    image: tiangolo/uwsgi-nginx-flask:python3.8
+    restart: always
+    environment:
+      STATIC_PATH: /app/app/static
+    volumes:
+# expected app directory by container
+      - ./app:/app
+# fake data volume
+      - /tmp:/data
+    depends_on:
+      - db
+    ports:
+      - "6005:80"
+    networks:
+      - frontend
+      - backend
+
+networks:
+  frontend:
+  backend:
